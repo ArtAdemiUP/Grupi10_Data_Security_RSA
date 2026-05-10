@@ -4,7 +4,7 @@ import pickle
 from cryptography.hazmat.primitives.asymmetric import rsa, padding
 from cryptography.hazmat.primitives import serialization, hashes
 
-HOST = '192.168.178.183'
+HOST = '0.0.0.0'
 PORT = 5555
 
 clients = {}
