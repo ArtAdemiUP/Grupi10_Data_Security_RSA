@@ -47,3 +47,55 @@ def handle_client(client_socket):
         public_keys[username] = public_key
 
         print(f"[+] {username} connected")
+        broadcast_user_list()
+
+        while True:
+            data = client_socket.recv(8192)
+            if not data:
+                break
+
+            message = pickle.loads(data)
+
+            if message['type'] == 'message':
+                receiver = message['to']
+
+                if receiver in clients:
+                    clients[receiver].send(pickle.dumps(message))
+
+    except Exception as e:
+        print(f"Error: {e}")
+
+    finally:
+        disconnected_user = None
+
+        for user, sock in clients.items():
+            if sock == client_socket:
+                disconnected_user = user
+                break
+
+        if disconnected_user:
+            del clients[disconnected_user]
+            del public_keys[disconnected_user]
+            print(f"[-] {disconnected_user} disconnected")
+            broadcast_user_list()
+
+        client_socket.close()
+
+
+def start_server():
+    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server.bind((HOST, PORT))
+    server.listen()
+
+    print(f"Server listening on {HOST}:{PORT}")
+
+    while True:
+        client_socket, addr = server.accept()
+        print(f"Connection from {addr}")
+
+        thread = threading.Thread(target=handle_client, args=(client_socket,))
+        thread.start()
+
+
+if __name__ == '__main__':
+    start_server()
